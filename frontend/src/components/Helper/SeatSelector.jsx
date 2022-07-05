@@ -5,7 +5,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 
 import { css} from '@emotion/css'
-import Top from './Top';                     // rendering in return statement (responsible for session checking & returning of current user email)
+                 // rendering in return statement (responsible for session checking & returning of current user email)
 import Checkbox from '@mui/material/Checkbox';
 
 
@@ -31,10 +31,6 @@ function Booking(props){           //for USER & GUEST
    //-------------------------------------------
    
    //Needed Inputs
-/*    var returnFlight=location.state.booking.selectedReturnFlight; 
-   var departureFlight= location.state.booking.selectedDepartureFlight; 
-   var search= location.state.search  */
-  
    var returnFlight= props.state1.booking.selectedReturnFlight; 
    var departureFlight= props.state1.booking.selectedDepartureFlight; 
    var search= props.state1.search 
@@ -146,7 +142,7 @@ function handleClick(){   // confirm button of choosing seats --> make booking
     returnChosenSeats: returnChosenSeats,
 };
   axios.post('http://localhost:8000/confirmBooking', article).then(
-      history.push({pathname:"user"})
+      history.push({pathname:"/"})
   );
 }
 }

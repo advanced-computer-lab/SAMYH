@@ -24,44 +24,43 @@ import MenuList from '@mui/material/MenuList';
 import Divider from '@mui/material/Divider';
 
 
-
-function Top(){      //for USER & GUEST
+function NavBar(props){      //for USER & GUEST
    
     const location = useLocation();
     const history = useHistory();
     const [x,setUser]=useState();
+    const [guestMode,setGuestMode]=useState(false);
     axios.defaults.withCredentials = true;
     
     useEffect(() => {
         axios.get('http://localhost:8000/currentUser').then(res =>{ 
-        if (res.data=="0" || res.data.type=="Admin"){
-        alert("Access Denied, Please Sign In First");
-        history.push({pathname:"/SignIn"});
-        }
-        else
-        setUser(res.data.email);
+        if (res.data==0){                                    // no guest logged in or user logged in
+        axios.get('http://localhost:8000/addGuest'); setGuestMode(true); console.log(res.data);}
+        else if (res.data.type=="Guest") setGuestMode(true); // guest looged in
+        else {setUser(res.data.email); setGuestMode(false)};   //user logged in
      })
     }, [location]);
 
     function handleclick7(event){
         event.preventDefault();
         history.push({
-        pathname: '/user'})
+        pathname: '/'})
     }
     function handleclick8(event){
         event.preventDefault();
-        history.push({pathname: '/UpdateUser' });
+        history.push({pathname: '/EditProfile' });
     }
     function handleclick9(event){
         event.preventDefault();
         axios.get('http://localhost:8000/logout').then(
         history.push({
-            pathname: '/'}))
+            pathname: '/'}));
+            window.location.reload();
     }
     function showBookings(event){
         event.preventDefault();
         history.push({
-        pathname: '/MyFlights'}); 
+        pathname: '/MyBookings'}); 
     }
 
 // MUI Profile Dropdown
@@ -89,6 +88,12 @@ function Top(){      //for USER & GUEST
     }
   }
 
+  function signIn(event){
+    event.preventDefault();
+    history.push({
+    pathname: '/SignIn'}); 
+  }
+
   // return focus to the button when we transitioned from !open -> open
   const prevOpen = React.useRef(open);
   React.useEffect(() => {
@@ -99,50 +104,59 @@ function Top(){      //for USER & GUEST
     prevOpen.current = open;
   }, [open]);
  
-// ----------
+// ----------------------
 
+var formFlag=false;
+var mode=props.state1;              // "landingPage" or "Page" or "form ->sign in & sign up"
+
+//Normal Page NavBar Style
+var style1= css` width: 100%; display:flex; height: 75px; position: fixed; padding-top:15px; 
+z-index:1;  font-family:"Josefin Sans"; color:	#2C85B8; box-shadow: 0px 0px 10px 1px lightGray; background-color:white;  ` ;
+
+//Landing Page NavBar Style 
+var style2= css` width: 100%; display:flex; height: 75px; position: fixed; padding-top:15px;   
+z-index:1; font-family:"Josefin Sans"; color:white;  `  ;
+
+var style;
+
+if (mode=="landingPage") style= style2;
+else if (mode=="Page")        style= style1;
+else { style= style1; formFlag=true}  // signIn & signup pages
 
 return (
-    <div className={css`
-    width: 100%;
-    display:flex;
-    height: 75px;
-    position: fixed;
-    padding-top:15px;
-    top: 0px;
-    left: 0px;
-    z-index:1;
-    color:	#2C85B8;
-    font-family:"Josefin Sans"; 
-    box-shadow: 0px 0px 10px 1px lightGray;
-     `}>
+  <div className={style}>
        
+     
+        
+       <img className={css`position: absolute; left: 10%; &:hover{cursor: pointer;`} onClick={handleclick7} src="/logo.png" />
       
-    <img className={css`position: absolute; left: 10%; &:hover{cursor: pointer; `} onClick={handleclick7} src="/logo.png" />
+        
+      {formFlag==false &&<div name="Book_MyBookings" className={css`position: absolute; left: 71%; top:22%; font-size: 22px; ` }>
+      <label className={css`&:hover{cursor: pointer;} `} onClick={handleclick7}>Book</label>  
+      &nbsp; &nbsp; &nbsp;    
+   
+      <label className={css` &:hover{cursor: pointer;}`} onClick={showBookings}>My Bookings</label> 
+      &nbsp; &nbsp; &nbsp;  
+   
+     </div>}
       
-         
-    <div className={css`position: absolute; left: 70%;` }>
-    <label className={css` font-size: 20px;  &:hover{cursor: pointer;} `} onClick={handleclick7}>BOOK</label>  
-    &nbsp; &nbsp; &nbsp;    &nbsp; &nbsp;  
- 
-    <label className={css`   font-size: 20px;  &:hover{cursor: pointer;}`} onClick={showBookings}>MY BOOKINGS</label> 
-   </div>
-    
+  <div name="ProfileIcon">
 
- <AccountCircleRoundedIcon  ref={anchorRef}
-        id="composition-button"
-        aria-controls={open ? 'composition-menu' : undefined}
-        aria-expanded={open ? 'true' : undefined}
-        aria-haspopup="true"
-        onClick={handleToggle} className={css`position: absolute; left: 88%; transform: scale(1.5); &:hover{cursor: pointer; `}/>
-        <Popper
-          open={open}
-          anchorEl={anchorRef.current}
-          role={undefined}
-          placement="bottom-end"
-          transition
-          disablePortal
-        >
+  {guestMode && <button class="btn btn-primary"  style={{ position: 'absolute' , left: '89%', top:'13%'}}  onClick={signIn}>Sign In</button>}
+   <AccountCircleRoundedIcon className={css`position: absolute; top:23%;left: 85%; transform: scale(1.5); &:hover{cursor: pointer; `}  ref={anchorRef}
+          id="composition-button"
+          aria-controls={open ? 'composition-menu' : undefined}
+          aria-expanded={open ? 'true' : undefined}
+          aria-haspopup="true"
+          onClick={handleToggle} />
+          <Popper
+            open={open}
+            anchorEl={anchorRef.current}
+            role={undefined}
+            placement="bottom-end"
+            transition
+            disablePortal
+          >
           {({ TransitionProps, placement }) => (
             <Grow
               {...TransitionProps}
@@ -159,21 +173,24 @@ return (
                     aria-labelledby="composition-button"
                     onKeyDown={handleListKeyDown}
                   >
-                     &nbsp;&nbsp;&nbsp;<PersonIcon/>&nbsp; {x} &nbsp;&nbsp;
-                    <Divider/>
+                     &nbsp;&nbsp;&nbsp;<PersonIcon/>
                     
+                    &nbsp; {guestMode && <a>Guest</a>}{x} &nbsp;&nbsp;
+               
+                                     
+                  {guestMode==false && 
+                  <a> <Divider/>
                     <MenuItem onClick={handleclick8}><EditIcon/> &nbsp; Edit Profile</MenuItem>
-                    <MenuItem onClick={showBookings}><ArticleIcon/> &nbsp; My Bookings</MenuItem>
-                  
-                  
-                    
-                    <MenuItem onClick={handleclick9}>&nbsp;<LogoutIcon/> &nbsp;  Logout</MenuItem>
+                    <MenuItem onClick={handleclick9}>&nbsp;<LogoutIcon/> &nbsp;  Sign Out</MenuItem>
+                  </a>}
+
                   </MenuList>
                 </ClickAwayListener>
               </Paper>
             </Grow>
           )}
         </Popper>
+        </div>
 
  </div>
 
@@ -181,4 +198,4 @@ return (
 );
 } 
 
-export default Top;
+export default NavBar;

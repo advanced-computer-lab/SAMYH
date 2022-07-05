@@ -54,12 +54,12 @@ router.route("/SignIn").post(async(req, res) => {
 });
 
 router.route("/currentUser").get((req, res) => {
-   if (req.session.email){
+   if (req.session.type=="Customer" || req.session.type=="Guest"){
      const user= {email: req.session.email, type: req.session.type  }
      res.send(user);  
    }
    else
-   res.send("0");
+   res.send("0"); // no one logged in -> add new guest
    });
 
 
@@ -72,23 +72,30 @@ router.route("/addGuest").get((req,res) => { //get becuase no input
      //req.session.email= guestEmail;
    
      const newGuest = new user({
-      Name : "Guest",
+      FirstName : "-",
+      LastName: "-",
       Email : guestEmail,
-      Password : "guest",
-      Type: "Guest", 
+      Password : "-",
       
+      PassportNo: "-",
+      Address: "-",
+      CountryCode: 0,
+      PhoneNo: 0,
+      Type: "Guest" 
        });
+      
+      
 
       newGuest.save();
       req.session.email = guestEmail; req.session.type="Guest"; res.send(req.session);
-      //res.send(guestEmail); 
+  
     })
  });
 
 router.route("/addUser").post(async(req,res) => {
    
-  const firstName= req.body.firstName;
-  const lastName= req.body.lastName;
+  const firstName= req.body.firstname;
+  const lastName= req.body.lastname;
   const passportNo= req.body.passportNo;
   const address= req.body.address;
   const countryCode= req.body.countryCode;
@@ -383,9 +390,9 @@ switch (cabin){
 
  //3) update booking collection with  new flight no & NewChosenSeats based on flight direction     
 if (FlightDirection=="DepartureFlight"){
-  booking.findOneAndUpdate({BookingNo: Booking.BookingNo},{DepartureFlightNo: newFlight.Flight_No, DepartureChosenSeats:  newChosenSeats},{ new: true, upsert: true }).then(res); 
+  booking.findOneAndUpdate({BookingNo: Booking.BookingNo},{DepartureFlightNo: newFlight.Flight_No, DepartureChosenSeats:  newChosenSeats},{ new: true, upsert: true }).then(res.send("1")); 
 }  else{                                   
-booking.findOneAndUpdate({BookingNo: Booking.BookingNo},{ReturnFlightNo: newFlight.Flight_No, ReturnChosenSeats:  newChosenSeats},{ new: true, upsert: true }).then(res);
+booking.findOneAndUpdate({BookingNo: Booking.BookingNo},{ReturnFlightNo: newFlight.Flight_No, ReturnChosenSeats:  newChosenSeats},{ new: true, upsert: true }).then(res.send("1"));
 }
 
  })
@@ -676,9 +683,9 @@ router.route("/UpdateBookingUser").post((req, res) => {
 
 router.route("/Updateinfo").post(async(req, res) => {
 //Inputs
-var newFirstName = req.body.firstName;
-var newLastName = req.body.lastName;
-var newEmailInput = req.body.email; var newEmail=  newEmailInput.toLowerCase();
+console.log(req.body);
+
+var newEmailInput = req.body.email;  var newEmail=  newEmailInput.toLowerCase();
 
 var newPassword = req.body.password; const encryptedNewPassword = await bcrypt.hash(newPassword, 10);  //Encrypt user new password
 var oldPassword= req.body.oldPassword;
@@ -699,15 +706,14 @@ user.find({Email: newEmail}).then(foundUser=>{
       //encrypt pass
       
       if(user){                   //user found/exists/true
-       user.FirstName = newFirstName;
-       user.LastName = newLastName;
+      
        user.Password = encryptedNewPassword;
        user.Email = newEmail;
        
        user.save(function (err) { if(err) {}   });           // updatesSaved
             
        req.session.email=newEmail;   //change session email after successful update
-       res.send("1");  //(old password given by user was correct) 
+       res.send({status:"1", oldEmail:emailNow});  //(old password given by user was correct) 
        }
        else res.send("2"); // wrong old password
      
@@ -739,7 +745,7 @@ console.log(pdfObject)
     to: req.session.email,
     subject: 'Itenerary',
     attachments:[{
-      filename: 'filename.pdf',
+      filename: 'Itinerary.pdf',
       content: pdfObject.data,     // the buffer of data of the file
       contentType: 'application/pdf'
   }]
@@ -978,17 +984,17 @@ var newSeatsArray= req.body.NewSeatsArray;
   switch(cabin){
     case("First"):{
     
-      flight.findOneAndUpdate({Flight_No: flightNo },{First_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res);
+      flight.findOneAndUpdate({Flight_No: flightNo },{First_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res.send("1"));
       }break;
     
     case("Business"):{
      
-      flight.findOneAndUpdate({Flight_No: flightNo },{Business_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res);
+      flight.findOneAndUpdate({Flight_No: flightNo },{Business_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res.send("1"));
       }break;
     
     case("Economy"):{
         
-        flight.findOneAndUpdate({Flight_No: flightNo },{Economy_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res);
+        flight.findOneAndUpdate({Flight_No: flightNo },{Economy_Class_Seats: newSeatsArray},{ new: true, upsert: true }).then(res.send("1") );
         }break;
   }
 });
@@ -1146,7 +1152,7 @@ var FRA= "FRA (Frankfurt Airport, Frankfurt, Germany)";
   });
    newFlight1.save();
 
-   d= "10:00"; a= "14:00";
+   d= "14:00"; a= "18:00";
    const newFlight2 = new flight({
     Flight_No: 2,
     From: JFK,

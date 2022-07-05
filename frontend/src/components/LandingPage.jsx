@@ -1,11 +1,11 @@
-import './style.css'
+import './css/style.css'
 import react, {useEffect,useState} from "react";
 import { Route, Redirect, useLocation } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { css} from '@emotion/css'
-import Top2 from './Top2';                     // rendering in return statement (responsible for session checking & returning of current user email)
+
 import * as React from 'react';
 
 import TextField from '@mui/material/TextField';
@@ -31,6 +31,8 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Box from '@mui/material/Box';
 import ManIcon from '@mui/icons-material/Man';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
+
+import NavBar from './Helper/NavBar';                     // rendering in return statement (responsible for session checking & returning of current user email)
 
 function User(){      //for USER & GUEST
 
@@ -115,7 +117,7 @@ axios.post('http://localhost:8000/searchFlightUser', input).then(res =>{
        else{
      console.log(res.data);
      history.push({
-       pathname: '/DepartureFlights',
+       pathname: '/FlightSelector',
        state: {matchedFlights: res.data, search: input}
      })
    
@@ -148,7 +150,7 @@ return (
   
    <div name="content">
       <div id='container' className={css` color: white; position: absolute; width: 100%; height: 620px; `} style={{backgroundImage: 'url("/wall5.jpg")'}}>
-          <Top2/> 
+          <NavBar state1="landingPage"/> 
           <div class="overlay">       <div class="text">Fly Safe.</div>     </div>
       </div>
      

@@ -3,38 +3,29 @@ import { Route, Redirect, useLocation } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
-
 import { css} from '@emotion/css'
-import Top from './Top';                     // rendering in return statement (responsible for session checking & returning of current user email)
 import Checkbox from '@mui/material/Checkbox';
 
 
-function ChangeSeats(){           //for USER & GUEST
+function ChangeSeats(props){           //helper component of booking details (which is a helper of MyBookings) (called for departure & return flight)
    const location = useLocation();
    const history = useHistory();
    axios.defaults.withCredentials = true;
 
    var flag=false;
    var confirmbookingclicked=false;
-   
-    if (location.state!=null){           //checking if user searched for a flight & selected a departure flight & variables were passed, no url
-    flag=true;   
-    
-   }
-   else{
-   alert("Please search for a flight to book first!");
-   history.push({
-       pathname: '/user' 
-       });
-   }
 
-   //-------------------------------------------
-var booking= location.state.Booking;
-   
-var Flight=location.state.Flight;   //needs flight  (as flight object only not with price)
+//-------------------------------------------
+
+//Needed Inputs (pass in props)     // from BookingDetailsPage
+var booking= props.state.Booking;
+var Flight=props.state.Flight;   //needs flight  (as flight object only not with price)
+var flightDirection= props.state.FlightDirection;
+
+//Derived Inputs
 var cabin= booking.Cabin;                                     // needs cabin
 var totalseats= booking.AdultSeats + booking.ChildrenSeats;  //needs total seats
-var flightDirection= location.state.FlightDirection  //departure flight or return flight (might need)
+
    
 //---------------------------------------------------
 var CabinSeatsArray; // cabin seats format array (that has indexes up to the max seats available on that cabin of all flights) (array of constant size, seats array gets aplied on it becuase to display cabin -> format should be the same for all flights)
@@ -128,31 +119,29 @@ function handleClick(){   // confirm button of choosing seats --> make change
     BookingNo: booking.BookingNo, FlightDirection: flightDirection, NewChosenSeats: ChosenSeats  // for updating booking collection with new chosen seats arrau based on booking no & flightdirection (departure/return)
 };
 console.log(article);
-axios.post('http://localhost:8000/changeSeats',article).then( alert ("Seat Change Done Successfully"))
-history.push({pathname:'MyFlights'});
+axios.post('http://localhost:8000/changeSeats',article).then( res=> {
+  if (res.data==1) { alert ("Seat Change Done Successfully"); window.location.reload();} 
+})
+  // after seats change action (remove & handle in bookingDetails)
   
 }
 
 }
 
+function handleCancel(event){
+  event.preventDefault();
+  window.location.reload();
+}
 
 //---------------------------------------------------
-  return( 
-<div>
-    <Top/>
 
-   <div  name="content" className={css`
-  position: absolute; left: 5%; top: 10%;  text-align: center; 
-  font-family: 'Josefin Sans'; font-size: 15px; `
-  }>
+return( 
 
-      <h1>Choose Seats</h1>
-
-      <div name="SeatSelector">
-      <label>Number of seats to  be chosen: {totalseats}</label>
+<div name="SeatSelector" style={{ textAlign:'center', padding:'20px'}}>
+   
       
 {cabin=="First" &&
-<div  name="First Class Format Seat Selector" style={{outline: '5px solid black', textAlign:'center', padding:'30px', borderRadius: '8px'}}>
+<div  name="First Class Format Seat Selector" >
 
 <img src="/F.jpg" /> <br></br> <br></br> <h3 >First Class</h3> <br></br> 
 
@@ -173,20 +162,17 @@ history.push({pathname:'MyFlights'});
     return (<a><Checkbox id={i} onChange={checkChange} disabled={seat==1}/> </a>)
     }
 )} 
-<br></br> <br></br>
-<button className="btn btn-primary" onClick={handleClick}>Confirm</button>
+
 </div>
 
 </div>
 }
 
 {cabin=="Business" &&
-      <div  name="Business Class Format Seat Selector" style={{outline: '5px solid black', textAlign:'center', padding:'30px', borderRadius: '8px'}}>
+      <div  name="Business Class Format Seat Selector" >
        
        <img src="/B.jpg" /> <br></br> <br></br> <h3 >Business Class</h3> <br></br> 
-      
-
-       
+            
         <div name="Flight"  style={{ width:'100%'}}>
       
         <br></br>
@@ -208,19 +194,17 @@ history.push({pathname:'MyFlights'});
             return (<a><Checkbox id={i} onChange={checkChange} disabled={seat==1}/> </a>)
             }
       )} 
-      <br></br> <br></br>
-<button className="btn btn-primary" onClick={handleClick}>Confirm</button>
+
         </div>
     
       </div>
 }
 
 {cabin=="Economy" &&
-      <div  name="Economy Class Format Seat Selector" style={{outline: '5px solid black', textAlign:'center', padding:'30px', borderRadius: '8px'}}>
+      <div  name="Economy Class Format Seat Selector" >
        
        <img src="/E.jpg" /> <br></br> <br></br> <h3 >Economy Class</h3> <br></br> 
         
-       
         <div name="Flight"  style={{ width:'100%'}}>
          <br></br>
             
@@ -242,19 +226,23 @@ history.push({pathname:'MyFlights'});
             return (<a><Checkbox id={i} onChange={checkChange} disabled={seat==1}/> </a>)
             }
       )} 
-        <br></br> <br></br>
-<button className="btn btn-primary" onClick={handleClick}>Confirm</button>
+
         </div>
 
       </div>
 }
 
 
+<br></br> <br></br>
+      <label style={{color: 'red'}}>*Number of seats to  be chosen (per flight): {totalseats}</label> <br></br>
+      <button className="btn btn-primary" onClick={handleClick}>Confirm</button> &nbsp; &nbsp;
+      <button className="btn btn-danger" onClick={handleCancel}>Cancel</button>
+      
        
         </div>
-    </div>  
+   
 
-</div>
+
    
 
        
